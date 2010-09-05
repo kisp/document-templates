@@ -1,0 +1,27 @@
+;;; -*- Mode:Lisp; Syntax:ANSI-Common-Lisp; Coding:utf-8 -*-
+;;; <%?system-name%> system definition
+
+(asdf:defsystem :<%?system-name%>
+  :name "<%?system-name%>"
+  :version #.(with-open-file
+                 (vers (merge-pathnames "version.lisp-expr" *load-truename*))
+               (read vers))
+  :components ((:static-file "version" :pathname #p"version.lisp-expr")
+               (:file "package")
+               (:file "<%?system-name%>" :depends-on ("package"))
+               )
+  :depends-on ())
+
+(asdf:defsystem :<%?system-name%>-test
+  :name "<%?system-name%>-test"
+  :components ((:file "tests"))
+  :depends-on (:myam :<%?system-name%>))
+
+(defmethod perform ((op asdf:test-op)
+                    (system (eql (find-system :<%?system-name%>))))
+  (asdf:oos 'asdf:load-op :<%?system-name%>-test)
+  (funcall (intern "RUN!" "MYAM") :<%?system-name%>-test))
+
+(defmethod perform ((op asdf:test-op)
+                    (system (eql (find-system :<%?system-name%>-test))))
+  (perform op (find-system :<%?system-name%>)))

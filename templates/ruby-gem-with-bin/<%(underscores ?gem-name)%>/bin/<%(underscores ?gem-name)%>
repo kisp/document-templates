@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+require '<%(underscores ?gem-name)%>'
+
+<%(camel-case ?gem-name)%>::main()
+
