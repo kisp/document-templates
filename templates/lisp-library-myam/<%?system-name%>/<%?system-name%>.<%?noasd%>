@@ -18,10 +18,10 @@
   :depends-on (:myam :<%?system-name%>))
 
 (defmethod perform ((op asdf:test-op)
-                    (system (eql (find-system :<%?system-name%>))))
+                    (system (eql (asdf:find-system :<%?system-name%>))))
   (asdf:oos 'asdf:load-op :<%?system-name%>-test)
   (funcall (intern "RUN!" "MYAM") :<%?system-name%>-test))
 
 (defmethod perform ((op asdf:test-op)
-                    (system (eql (find-system :<%?system-name%>-test))))
-  (perform op (find-system :<%?system-name%>)))
+                    (system (eql (asdf:find-system :<%?system-name%>-test))))
+  (perform op (asdf:find-system :<%?system-name%>)))
