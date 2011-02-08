@@ -139,6 +139,7 @@
         default
         line)))
 
+#+sbcl
 (defun main (argv)
   (sb-ext:disable-debugger)
   (when (= 1 (length argv))
