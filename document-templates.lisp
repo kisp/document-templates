@@ -144,7 +144,7 @@
   (sb-ext:disable-debugger)
   (when (= 1 (length argv))
     (format t "USAGE: document-templates TARGET-DIRECTORY~%")
-    (format t "version ~A~%" (asdf:component-version (asdf:find-system :document-templates)))
+    (format t "version ~A~%" #.(asdf:component-version (asdf:find-system :document-templates)))
     (sb-ext:quit :unix-status 1))
   (destructuring-bind (output-directory)
       (cdr argv)
