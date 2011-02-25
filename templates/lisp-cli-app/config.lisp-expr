@@ -2,6 +2,11 @@
 
 (:template-files-directory #p"<%\\?system-name%>/"
                            :template-file-pathnames
-                           (#p"*.lisp" #p"*.<%?noasd%>")
+                           (#p"*.lisp"
+                              #p"*.<%?noasd%>"
+                              #p".gitignore"
+                              #p"Makefile"
+                              #p"features/*.feature"
+                              #p"features/support/*.rb")
                            :default-parameters
                            (:system-name "myapp" :noasd "asd"))
