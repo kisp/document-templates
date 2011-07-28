@@ -1,13 +1,5 @@
 ;;; -*- Mode:Lisp; Syntax:ANSI-Common-Lisp; Coding:utf-8 -*-
 
-(pushnew (merge-pathnames ".clnk/asd/"
-                          (user-homedir-pathname))
-         asdf:*central-registry*
-         :test #'equal)
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (asdf:oos 'asdf:load-op :cl-ppcre))
-
 (defpackage #:ruby-gem
   (:use #:cl #:document-templates #:cl-ppcre))
 

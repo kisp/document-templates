@@ -11,4 +11,6 @@
 	       (:file "package")
 	       (:file "document-templates" :depends-on ("package"))
 	       )
-  :depends-on (:alexandria :cl-fad :trivial-template))
+  :depends-on (:alexandria :cl-fad :trivial-template
+			   ;; for templates/ruby-gem-with-bin
+			   :cl-ppcre))
