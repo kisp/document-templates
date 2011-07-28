@@ -22,3 +22,11 @@ uninstall:
 .PHONY:clean
 clean:
 	git clean -f -x -d
+
+.PHONY:paco-uninstall
+paco-uninstall:
+	paco -r --batch document-templates
+
+.PHONY:paco-install
+paco-install:
+	paco -l -D -- make install
