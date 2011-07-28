@@ -2,9 +2,8 @@ PREFIX = /usr/local
 
 document-templates: document-templates.lisp document-templates.asd
 	buildapp --output document-templates \
-	--asdf-path ~/.clnk/asd \
-        --asdf-path ~/.nkzs-reg/asd \
-        --eval "(push '*default-pathname-defaults* asdf:*central-registry*)" \
+	--eval '(load (merge-pathnames "quicklisp/setup.lisp" (user-homedir-pathname)))' \
+	--eval "(push '*default-pathname-defaults* asdf:*central-registry*)" \
 	--load-system document-templates \
 	--eval "(setq document-templates::*template-directory* #p\"${PREFIX}/share/document-templates/templates/\")" \
 	--entry document-templates::main
