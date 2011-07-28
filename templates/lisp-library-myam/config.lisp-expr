@@ -1,7 +1,7 @@
 ;; -*- mode: lisp -*-
 
 (:template-files-directory #p"<%\\?system-name%>/"
-                           :template-file-pathnames
-                           (#p"*.lisp" #p"*.lisp-expr" #p"*.<%?noasd%>")
-                           :default-parameters
-                           (:system-name "mylib" :noasd "asd"))
+			   :template-file-pathnames
+			   (#p"*.lisp" #p".gitignore" #p"*.lisp-expr" #p"*.<%?noasd%>")
+			   :default-parameters
+			   (:system-name "mylib" :noasd "asd"))
