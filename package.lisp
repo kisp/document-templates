@@ -3,6 +3,6 @@
 ;;;
 
 (defpackage :document-templates
-  (:use :common-lisp :trivial-template :alexandria)
+  (:use :common-lisp :trivial-template :alexandria :hgetopt)
   (:export #:fill-template
-	   #:show-default-parameters))
+           #:show-default-parameters))

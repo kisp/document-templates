@@ -10,6 +10,7 @@ document-templates: document-templates.lisp document-templates.asd
 
 .PHONY:install
 install: document-templates
+	mkdir -p ${PREFIX}/bin
 	install document-templates ${PREFIX}/bin/document-templates
 	mkdir -p ${PREFIX}/share/document-templates
 	cp -r templates ${PREFIX}/share/document-templates

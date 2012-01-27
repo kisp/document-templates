@@ -139,25 +139,117 @@
         default
         line)))
 
+(define-condition quit ()
+  ((exit-code :initarg :exit-code :reader exit-code))
+  (:default-initargs :exit-code 0))
+
+(define-condition usage ()
+  ((list-options :initarg :list-options :reader list-options)
+   (errors :accessor errors :initarg :errors))
+  (:default-initargs :list-options nil :errors nil))
+
+(define-condition fatal (simple-error)
+  ())
+
+(defmacro with-quit-debug-handler (() &body body)
+  `(let ((exit-code nil))
+     (handler-case
+         (progn ,@body
+                (warn "~S should never return" ',body))
+       (quit (c) (setq exit-code (exit-code c)))
+       (error (c) (warn "caught~%~S~%  ~A~%where we expected QUIT condition" c c)))
+     (format t "** exit-code: ~S~%" exit-code)))
+
+(defun main2 (output-directory)
+  (let* ((output-directory (merge-pathnames (cl-fad:pathname-as-directory output-directory)))
+         (template-directory (prompt-for-list-item
+                              "Choose Template:"
+                              (list-template-directories) :key #'directory-namestring))
+         (template-config-pathname (merge-pathnames "config.lisp-expr" template-directory)))
+    (let ((parameters (alist-plist
+                       (with-open-config (config-parameters template-config-pathname)
+                         (loop for (name . default) in
+                              (plist-alist (getf config-parameters :default-parameters))
+                            collect (cons name (prompt-for-defaulted-string name default)))))))
+      (fill-template template-config-pathname
+                     parameters
+                     output-directory))))
+
+(defun dispatch (opts args errs)
+  (when errs
+    (error 'usage :errors errs))
+  (when (member :help opts)
+    (error 'usage :list-options t))
+  (when (member :version opts)
+    (format t "document-templates, version ~A~%"
+            #.(asdf:component-version (asdf:find-system :document-templates)))
+    (error 'quit :exit-code 0))
+  (when (member :templates-dir opts :key #'ensure-car)
+    (let* ((arg (cadar (member :templates-dir opts :key #'ensure-car)))
+           (dir (probe-file arg)))
+      (cond ((not dir)
+             (error 'fatal
+                    :format-control "Does not exist: ~A"
+                    :format-arguments (list arg)))
+            ((not (cl-fad:directory-pathname-p dir))
+             (error 'fatal
+                    :format-control "Not a directory: ~A"
+                    :format-arguments (list arg)))
+            (t (setq *template-directory* dir)))))
+  (when (member :list-templates opts)
+    (dolist (dir (list-template-directories))
+      (format t "~A~%" dir))
+    (error 'quit :exit-code 0))
+  (unless (length= 1 args)
+    (error 'usage))
+  (main2 (first args))
+  (error 'quit :exit-code 0))
+
+(defun main3 (argv)
+  (let ((options
+         (list
+          (make-option '(#\l) '("list-templates")
+                       (no-arg (constantly :list-templates))
+                       "list template directories")
+          (make-option nil '("templates-dir")
+                       (req-arg (curry #'list :templates-dir) "DIR")
+                       "override templates directory")
+          (make-option '(#\V) '("version")
+                       (no-arg (constantly :version))
+                       "show version")
+          (make-option '(#\h) '("help")
+                       (no-arg (constantly :help))
+                       "show help"))))
+    (multiple-value-bind (opts args errs)
+        (get-opt :permute options (cdr argv))
+      (handler-case
+          (dispatch opts args errs)
+        (usage (c)
+          (write-line (usage-line))
+          (if (list-options c)
+              (write-string
+               (usage-info (format nil "Options:") options))
+              (write-line (help-line)))
+          (dolist (err (errors c))
+            (write-string err))
+          (error 'quit :exit-code 1))
+        (fatal (c)
+          (format t "Fatal error: ")
+          (apply #'format t
+                 (simple-condition-format-control c)
+                 (simple-condition-format-arguments c))
+          (terpri)
+          (error 'quit :exit-code 1))))))
+
+(defun usage-line ()
+  "Usage: document-templates TARGET-DIRECTORY")
+
+(defun help-line ()
+  "To list options, try the `--help' option.")
+
 #+sbcl
 (defun main (argv)
   (sb-ext:disable-debugger)
-  (when (= 1 (length argv))
-    (format t "USAGE: document-templates TARGET-DIRECTORY~%")
-    (format t "version ~A~%" #.(asdf:component-version (asdf:find-system :document-templates)))
-    (sb-ext:quit :unix-status 1))
-  (destructuring-bind (output-directory)
-      (cdr argv)
-    (let* ((output-directory (merge-pathnames (cl-fad:pathname-as-directory output-directory)))
-           (template-directory (prompt-for-list-item
-                                "Choose Template:"
-                                (list-template-directories) :key #'directory-namestring))
-           (template-config-pathname (merge-pathnames "config.lisp-expr" template-directory)))
-      (let ((parameters (alist-plist
-                         (with-open-config (config-parameters template-config-pathname)
-                           (loop for (name . default) in
-                                (plist-alist (getf config-parameters :default-parameters))
-                              collect (cons name (prompt-for-defaulted-string name default)))))))
-        (fill-template template-config-pathname
-                       parameters
-                       output-directory)))))
+  (handler-case
+      (main3 argv)
+    (quit (c) (sb-ext:quit :unix-status (exit-code c)))))
