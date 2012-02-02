@@ -1,5 +1,5 @@
 ;;; document-templates
-;;;
+
 (in-package :document-templates)
 
 (defun pathname-parent-directory (pathname)
@@ -24,6 +24,7 @@
   (with-open-file (in pathname :external-format :utf-8)
     (read in)))
 
+;;; xxx not pure - *default-pathname-defaults*
 (defun template-files-directory (config-parameters)
   (let ((template-files-directory
          (getf config-parameters :template-files-directory)))
@@ -32,6 +33,7 @@
          (merge-pathnames template-files-directory)
          *default-pathname-defaults*))))
 
+;;; xxx how does this work?
 (defun template-file-pathnames (config-parameters template-files-directory)
   (mapcar #'enough-pathname
           (let ((*default-pathname-defaults* template-files-directory))
@@ -160,75 +162,152 @@
        (error (c) (warn "caught~%~S~%  ~A~%where we expected QUIT condition" c c)))
      (format t "** exit-code: ~S~%" exit-code)))
 
-(defun main2 (output-directory)
-  (let* ((output-directory (merge-pathnames (cl-fad:pathname-as-directory output-directory)))
-         (template-directory (prompt-for-list-item
-                              "Choose Template:"
-                              (list-template-directories) :key #'directory-namestring))
-         (template-config-pathname (merge-pathnames "config.lisp-expr" template-directory)))
-    (let ((parameters (alist-plist
-                       (with-open-config (config-parameters template-config-pathname)
-                         (loop for (name . default) in
-                              (plist-alist (getf config-parameters :default-parameters))
-                            collect (cons name (prompt-for-defaulted-string name default)))))))
-      (fill-template template-config-pathname
-                     parameters
-                     output-directory))))
+(define-condition unexpected-args (error)
+  ((args :reader unexpected-args :initarg :args)))
+
+(define-condition unexpected-key (error)
+  ((key :reader unexpected-key-key :initarg :key)
+   (value :reader unexpected-key-value :initarg :value)))
+
+(define-condition missing-args (error)
+  ((args :reader missing-args :initarg :args)))
+
+(defmacro defcmd (name lambda-list &body body)
+  `(progn
+     (setf (get ',name 'parsed-lambda-list)
+           ',(multiple-value-list
+              (parse-ordinary-lambda-list lambda-list)))
+     (defun ,name ,lambda-list ,@body)))
+
+(defun check-cmd-application (parsed-lambda-list args opts)
+  (destructuring-bind (required optional rest keys allow-other-keys aux)
+      parsed-lambda-list
+    (declare (ignore aux))
+    (cond
+      (rest)
+      ((<= (length required)
+           (length args)
+           (+ (length required) (length optional))))
+      ((< (length args)
+          (length required))
+       (error 'missing-args :args (subseq required (length args))))
+      (t (error 'unexpected-args
+                :args (subseq args (+ (length required) (length optional))))))
+    (unless allow-other-keys
+      (loop for (key . value) in (alexandria:plist-alist opts)
+         unless (member key keys :key #'caar)
+         do (error 'unexpected-key :key key :value value)))))
+
+(defun cmdcall (cmd args opts)
+  (let ((parsed-lambda-list (get cmd 'parsed-lambda-list :not-found)))
+    (when (eql :not-found parsed-lambda-list)
+      (error "~S is not a known cmd" cmd))
+    (check-cmd-application parsed-lambda-list args opts)
+    (apply cmd (append args opts))))
+
+(defun invoke-with-templates-dir-opt (templates-dir fn)
+  (let ((dir (probe-file templates-dir)))
+    (cond ((not dir)
+           (error 'fatal
+                  :format-control "Does not exist: ~A"
+                  :format-arguments (list templates-dir)))
+          ((not (cl-fad:directory-pathname-p dir))
+           (error 'fatal
+                  :format-control "Not a directory: ~A"
+                  :format-arguments (list templates-dir)))
+          (t (let ((*template-directory* dir))
+               (funcall fn))))))
+
+(defmacro with-templates-dir-opt ((templates-dir) &body body)
+  `(invoke-with-templates-dir-opt ,templates-dir (lambda () ,@body)))
+
+(defcmd cmd-help (&rest args &key &allow-other-keys)
+  (declare (ignore args))
+  (error 'usage :list-options t))
+
+(defcmd cmd-version (&rest args &key &allow-other-keys)
+  (declare (ignore args))
+  (format t "document-templates, version ~A~%"
+          #.(asdf:component-version (asdf:find-system :document-templates)))
+  (error 'quit :exit-code 0))
+
+(defcmd cmd-list-templates (&key (templates-dir *template-directory*))
+  (with-templates-dir-opt (templates-dir)
+    (dolist (dir (list-template-directories))
+      (format t "~A~%" dir))
+    (error 'quit :exit-code 0)))
+
+(defcmd cmd-fill-template (output-directory
+                           &key (templates-dir *template-directory*))
+  (with-templates-dir-opt (templates-dir)
+    (let* ((output-directory (merge-pathnames (cl-fad:pathname-as-directory output-directory)))
+           (template-directory (prompt-for-list-item
+                                "Choose Template:"
+                                (list-template-directories) :key #'directory-namestring))
+           (template-config-pathname (merge-pathnames "config.lisp-expr" template-directory)))
+      (let ((parameters (alist-plist
+                         (with-open-config (config-parameters template-config-pathname)
+                           (loop for (name . default) in
+                                (plist-alist (getf config-parameters :default-parameters))
+                              collect (cons name (prompt-for-defaulted-string name default)))))))
+        (fill-template template-config-pathname
+                       parameters
+                       output-directory)))
+    (error 'quit :exit-code 0)))
 
 (defun dispatch (opts args errs)
   (when errs
     (error 'usage :errors errs))
-  (when (member :help opts)
-    (error 'usage :list-options t))
-  (when (member :version opts)
-    (format t "document-templates, version ~A~%"
-            #.(asdf:component-version (asdf:find-system :document-templates)))
-    (error 'quit :exit-code 0))
-  (when (member :templates-dir opts :key #'ensure-car)
-    (let* ((arg (cadar (member :templates-dir opts :key #'ensure-car)))
-           (dir (probe-file arg)))
-      (cond ((not dir)
-             (error 'fatal
-                    :format-control "Does not exist: ~A"
-                    :format-arguments (list arg)))
-            ((not (cl-fad:directory-pathname-p dir))
-             (error 'fatal
-                    :format-control "Not a directory: ~A"
-                    :format-arguments (list arg)))
-            (t (setq *template-directory* dir)))))
-  (when (member :list-templates opts)
-    (dolist (dir (list-template-directories))
-      (format t "~A~%" dir))
-    (error 'quit :exit-code 0))
-  (unless (length= 1 args)
-    (error 'usage))
-  (main2 (first args))
-  (error 'quit :exit-code 0))
+  (when (< 1 (count-if #'symbolp opts))
+    (error 'fatal
+           :format-control "More than one command given."))
+  (let ((cmd (or (find-if #'symbolp opts)
+                 'cmd-help)))
+    (handler-case
+        (cmdcall cmd args (flatten (remove cmd opts)))
+      (missing-args (c)
+        (error 'fatal :format-control "Command ~A expected arg~P ~{~A~^, ~}."
+               :format-arguments (list cmd (length (missing-args c)) (missing-args c))))
+      (unexpected-args (c)
+        (error 'fatal :format-control "Command ~A did not expect arg~P ~{~A~^, ~}."
+               :format-arguments (list cmd (length (unexpected-args c)) (unexpected-args c))))
+      (unexpected-key (c)
+        (error 'fatal :format-control "Command ~A did not expect option ~A."
+               :format-arguments (list cmd (unexpected-key-key c)))))))
 
-(defun main3 (argv)
-  (let ((options
-         (list
-          (make-option '(#\l) '("list-templates")
-                       (no-arg (constantly :list-templates))
-                       "list template directories")
-          (make-option nil '("templates-dir")
-                       (req-arg (curry #'list :templates-dir) "DIR")
-                       "override templates directory")
-          (make-option '(#\V) '("version")
-                       (no-arg (constantly :version))
-                       "show version")
-          (make-option '(#\h) '("help")
-                       (no-arg (constantly :help))
-                       "show help"))))
+(defun main (argv)
+  (let* ((cmds
+          (list
+           (make-option '(#\f) '("fill-template")
+                        (no-arg (constantly 'cmd-fill-template))
+                        "fill a template")
+           (make-option '(#\l) '("list-templates")
+                        (no-arg (constantly 'cmd-list-templates))
+                        "list template directories")
+           (make-option '(#\V) '("version")
+                        (no-arg (constantly 'cmd-version))
+                        "show version")
+           (make-option '(#\h) '("help")
+                        (no-arg (constantly 'cmd-help))
+                        "show help")))
+         (options
+          (list
+           (make-option '(#\T) '("templates-dir")
+                        (req-arg (curry #'list :templates-dir) "DIR")
+                        "override templates directory")))
+         (all (append cmds options)))
     (multiple-value-bind (opts args errs)
-        (get-opt :permute options (cdr argv))
+        (get-opt :permute all (cdr argv))
       (handler-case
           (dispatch opts args errs)
         (usage (c)
           (write-line (usage-line))
           (if (list-options c)
-              (write-string
-               (usage-info (format nil "Options:") options))
+              (progn
+                (write-string
+                 (usage-info (format nil "Commands:") cmds))
+                (write-string
+                 (usage-info (format nil "Options:") options)))
               (write-line (help-line)))
           (dolist (err (errors c))
             (write-string err))
@@ -242,14 +321,14 @@
           (error 'quit :exit-code 1))))))
 
 (defun usage-line ()
-  "Usage: document-templates TARGET-DIRECTORY")
+  "Usage: document-templates [OPTS]")
 
 (defun help-line ()
   "To list options, try the `--help' option.")
 
 #+sbcl
-(defun main (argv)
+(defun sbcl-main (argv)
   (sb-ext:disable-debugger)
   (handler-case
-      (main3 argv)
+      (main argv)
     (quit (c) (sb-ext:quit :unix-status (exit-code c)))))

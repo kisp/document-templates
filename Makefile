@@ -6,7 +6,7 @@ document-templates: document-templates.lisp document-templates.asd
 	--eval "(push '*default-pathname-defaults* asdf:*central-registry*)" \
 	--load-system document-templates \
 	--eval "(setq document-templates::*template-directory* #p\"${PREFIX}/share/document-templates/templates/\")" \
-	--entry document-templates::main
+	--entry document-templates::sbcl-main
 
 .PHONY:install
 install: document-templates
