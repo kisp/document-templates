@@ -1,4 +1,5 @@
 PREFIX = /usr/local
+TEMPLATES_REPO = git@pwgl.homeip.net:repos/document-templates-data.git
 
 version := $(shell SBCL_HOME=/usr/lib/sbcl sbcl --noinform --end-runtime-options --no-userinit --eval '(with-open-file (in "version.lisp-expr") (princ (read in)) (quit))' --end-toplevel-options)
 
@@ -25,6 +26,10 @@ uninstall:
 .PHONY:clean
 clean:
 	git clean -f -x -d
+
+.PHONY:checkout-templates
+checkout-templates:
+	git clone ${TEMPLATES_REPO} templates
 
 .PHONY:paco-uninstall
 paco-uninstall:
