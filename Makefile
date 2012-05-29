@@ -1,8 +1,6 @@
 PREFIX = /usr/local
 TEMPLATES_REPO = git@pwgl.homeip.net:repos/document-templates-data.git
 
-version := $(shell SBCL_HOME=/usr/lib/sbcl sbcl --noinform --end-runtime-options --no-userinit --eval '(with-open-file (in "version.lisp-expr") (princ (read in)) (quit))' --end-toplevel-options)
-
 document-templates: document-templates.lisp document-templates.asd
 	buildapp --output document-templates \
 	--eval '(load (merge-pathnames "quicklisp/setup.lisp" (user-homedir-pathname)))' \
@@ -40,7 +38,6 @@ paco-install:
 	paco -l -D -- make install
 
 stow-dir := /var/lib/stow
-stow-prefix := $(stow-dir)/document-templates-$(version)
 
 .PHONY:stow-uninstall-all
 stow-uninstall-all:
@@ -48,6 +45,8 @@ stow-uninstall-all:
 
 .PHONY:stow-install
 stow-install:
+	version := $(shell SBCL_HOME=/usr/lib/sbcl sbcl --noinform --end-runtime-options --no-userinit --eval '(with-open-file (in "version.lisp-expr") (princ (read in)) (quit))' --end-toplevel-options)
+	stow-prefix := $(stow-dir)/document-templates-$(version)
 	cd $(stow-dir) && [ ! -d document-templates* ] || stow -D document-templates*
 	mkdir -p $(stow-prefix)/bin
 	install document-templates $(stow-prefix)/bin/document-templates
