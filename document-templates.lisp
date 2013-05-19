@@ -184,9 +184,9 @@
      (defun ,name ,lambda-list ,@body)))
 
 (defun check-cmd-application (parsed-lambda-list args opts)
-  (destructuring-bind (required optional rest keys allow-other-keys aux)
+  (destructuring-bind (required optional rest keys allow-other-keys aux key-exists)
       parsed-lambda-list
-    (declare (ignore aux))
+    (declare (ignore aux key-exists))
     (cond
       (rest)
       ((<= (length required)
@@ -331,8 +331,8 @@
   "To list options, try the `--help' option.")
 
 #+sbcl
-(defun sbcl-main (argv)
+(defun sbcl-main ()
   (sb-ext:disable-debugger)
   (handler-case
-      (main argv)
-    (quit (c) (sb-ext:quit :unix-status (exit-code c)))))
+      (main sb-ext:*posix-argv*)
+    (quit (c) (sb-ext:exit :code (exit-code c)))))
