@@ -27,7 +27,7 @@
 ;;; xxx not pure - *default-pathname-defaults*
 (defun template-files-directory (config-parameters)
   (let ((template-files-directory
-         (getf config-parameters :template-files-directory)))
+          (getf config-parameters :template-files-directory)))
     (non-wild-directory
      (if template-files-directory
          (merge-pathnames template-files-directory)
@@ -44,8 +44,8 @@
 
 (defun template-package (config-parameters)
   (let ((package-designator
-         (getf config-parameters :template-package
-               :document-templates)))
+          (getf config-parameters :template-package
+                :document-templates)))
     (find-package package-designator)))
 
 (defmacro with-template-package ((config-parameters) &body body)
@@ -74,7 +74,7 @@
                                           output-directory)))
     (ensure-directories-exist output-pathname)
     (with-open-file (out output-pathname :direction :output
-                         :external-format :utf-8 :if-exists :supersede)
+                                         :external-format :utf-8 :if-exists :supersede)
       (princ-template (parse-template
                        (read-file-into-string template-file-pathname
                                               :external-format :utf-8))
@@ -90,26 +90,26 @@
   (with-gensyms (=template-config-pathname=)
     `(let* ((,=template-config-pathname= ,template-config-pathname)
             (*default-pathname-defaults*
-             (pathname-parent-directory ,=template-config-pathname=))
+              (pathname-parent-directory ,=template-config-pathname=))
             (,config-parameters-var
-             (read-config-file ,=template-config-pathname=)))
+              (read-config-file ,=template-config-pathname=)))
        ,@body)))
 
 (defun show-default-parameters (template-config-pathname)
   (with-open-config (config-parameters template-config-pathname)
     (loop for (name . default) in
-         (plist-alist (getf config-parameters :default-parameters))
-       do (format t "; ~S~24T~S~%" name default))))
+                               (plist-alist (getf config-parameters :default-parameters))
+          do (format t "; ~S~24T~S~%" name default))))
 
 (defun fill-template (template-config-pathname parameters output-directory)
   (with-open-config (config-parameters template-config-pathname)
     (let* ((output-directory
-            (non-wild-directory output-directory))
+             (non-wild-directory output-directory))
            (template-files-directory
-            (template-files-directory config-parameters))
+             (template-files-directory config-parameters))
            (template-file-pathnames
-            (template-file-pathnames config-parameters
-                                     template-files-directory)))
+             (template-file-pathnames config-parameters
+                                      template-files-directory)))
       (load-template-lisp-init-file config-parameters)
       (with-template-package (config-parameters)
         (dolist (template-file-pathname template-file-pathnames)
@@ -131,8 +131,8 @@
 (defun prompt-for-list-item (message list &key (key #'identity))
   (format t "~A~%" message)
   (loop for i upfrom 1
-     for item in list
-     do (format t "~A] ~A~%" i (funcall key item)))
+        for item in list
+        do (format t "~A] ~A~%" i (funcall key item)))
   (let ((n (parse-integer (read-line) :junk-allowed t)))
     (or (and n (> n 0) (nth (1- n) list))
         (prompt-for-list-item message list :key key))))
@@ -199,8 +199,8 @@
                 :args (subseq args (+ (length required) (length optional))))))
     (unless allow-other-keys
       (loop for (key . value) in (alexandria:plist-alist opts)
-         unless (member key keys :key #'caar)
-         do (error 'unexpected-key :key key :value value)))))
+            unless (member key keys :key #'caar)
+              do (error 'unexpected-key :key key :value value)))))
 
 (defun cmdcall (cmd args opts)
   (let ((parsed-lambda-list (get cmd 'parsed-lambda-list :not-found)))
@@ -252,8 +252,8 @@
       (let ((parameters (alist-plist
                          (with-open-config (config-parameters template-config-pathname)
                            (loop for (name . default) in
-                                (plist-alist (getf config-parameters :default-parameters))
-                              collect (cons name (prompt-for-defaulted-string name default)))))))
+                                                      (plist-alist (getf config-parameters :default-parameters))
+                                 collect (cons name (prompt-for-defaulted-string name default)))))))
         (fill-template template-config-pathname
                        parameters
                        output-directory)))
@@ -271,34 +271,34 @@
         (cmdcall cmd args (flatten (remove cmd opts)))
       (missing-args (c)
         (error 'fatal :format-control "Command ~A expected arg~P ~{~A~^, ~}."
-               :format-arguments (list cmd (length (missing-args c)) (missing-args c))))
+                      :format-arguments (list cmd (length (missing-args c)) (missing-args c))))
       (unexpected-args (c)
         (error 'fatal :format-control "Command ~A did not expect arg~P ~{~A~^, ~}."
-               :format-arguments (list cmd (length (unexpected-args c)) (unexpected-args c))))
+                      :format-arguments (list cmd (length (unexpected-args c)) (unexpected-args c))))
       (unexpected-key (c)
         (error 'fatal :format-control "Command ~A did not expect option ~A."
-               :format-arguments (list cmd (unexpected-key-key c)))))))
+                      :format-arguments (list cmd (unexpected-key-key c)))))))
 
 (defun main (argv)
   (let* ((cmds
-          (list
-           (make-option '(#\f) '("fill-template")
-                        (no-arg (constantly 'cmd-fill-template))
-                        "fill a template")
-           (make-option '(#\l) '("list-templates")
-                        (no-arg (constantly 'cmd-list-templates))
-                        "list template directories")
-           (make-option '(#\V) '("version")
-                        (no-arg (constantly 'cmd-version))
-                        "show version")
-           (make-option '(#\h) '("help")
-                        (no-arg (constantly 'cmd-help))
-                        "show help")))
+           (list
+            (make-option '(#\f) '("fill-template")
+                         (no-arg (constantly 'cmd-fill-template))
+                         "fill a template")
+            (make-option '(#\l) '("list-templates")
+                         (no-arg (constantly 'cmd-list-templates))
+                         "list template directories")
+            (make-option '(#\V) '("version")
+                         (no-arg (constantly 'cmd-version))
+                         "show version")
+            (make-option '(#\h) '("help")
+                         (no-arg (constantly 'cmd-help))
+                         "show help")))
          (options
-          (list
-           (make-option '(#\T) '("templates-dir")
-                        (req-arg (curry #'list :templates-dir) "DIR")
-                        "override templates directory")))
+           (list
+            (make-option '(#\T) '("templates-dir")
+                         (req-arg (curry #'list :templates-dir) "DIR")
+                         "override templates directory")))
          (all (append cmds options)))
     (multiple-value-bind (opts args errs)
         (get-opt :permute all (cdr argv))

@@ -13,4 +13,4 @@
                )
   :depends-on (:alexandria :cl-fad :trivial-template :hgetopt
                            ;; for templates/ruby-gem-with-bin
-                           :cl-ppcre))
+               :cl-ppcre))
