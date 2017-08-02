@@ -1,0 +1,24 @@
+language: common-lisp
+sudo: required
+
+env:
+  matrix:
+    - LISP=sbcl-bin TARGET=qlot
+#    - LISP=sbcl-bin TARGET=bundle
+
+install:
+#  - sudo apt-get install checkinstall
+  - case "$TARGET" in 
+      qlot)
+        curl -L https://raw.githubusercontent.com/roswell/roswell/release/scripts/install-for-ci.sh | sh
+        ;;
+      bundle)
+        sudo apt-get install sbcl
+        ;;
+    esac
+  - bundle install
+
+script:
+  - ./configure --prefix=/usr
+  - make $TARGET-build
+  - make cucumber

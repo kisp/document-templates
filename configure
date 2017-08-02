@@ -1,0 +1,24 @@
+#!/bin/sh
+
+prefix=/usr/local
+
+while :; do
+    case $1 in
+        --prefix=?*)
+            prefix=${1#*=}
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -?*)
+            printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+            ;;
+        *)
+            break
+    esac
+    shift
+done
+
+echo "prefix = $prefix" >Makefile
+cat Makefile.in >>Makefile
