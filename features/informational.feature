@@ -6,7 +6,7 @@ Feature: informational
   Scenario: print version
      When I run `document-templates --version`
      Then the exit status should be 0
-     And the output should contain "document-templates 0.0.12"
+     And the output should contain "document-templates, version 0.0.12"
 
   Scenario: print short usage
     When I run `document-templates`
