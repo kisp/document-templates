@@ -1,0 +1,39 @@
+
+# prefix = something will be inserted here
+
+bindir = $(prefix)/bin
+
+default: bundle-build
+
+qlot-build:
+	ros --version
+	ros config
+	ros -l .sbcl-disable-debugger.lisp  -s qlot  -e '(qlot:install)'
+	env
+	ros -l .sbcl-disable-debugger.lisp  -s qlot \
+	  -e '(push :standalone *features*)' \
+	  -e '(qlot:quickload :document-templates)' \
+	  -e '(document-templates::dump)'
+	./document-templates --version
+
+bundle-build:
+	sbcl --version
+	tar xfj bundle-libs.tar.bz2
+	sbcl --no-userinit --non-interactive \
+	  --load .sbcl-disable-debugger.lisp \
+	  --load bundle-libs/bundle.lisp \
+	  --load document-templates.asd \
+	  --eval '(push :standalone *features*)' \
+	  --eval '(setq *compile-print* nil)' \
+	  --eval '(without-warnings (asdf:load-system :document-templates))' \
+	  --eval '(document-templates::dump)'
+	./document-templates --version
+
+cucumber:
+	mkdir -p bin
+	ln -sf ../document-templates bin/document-templates
+	bundle exec cucumber
+
+install:
+	mkdir -p "$(DESTDIR)$(bindir)"
+	install -m 755 document-templates "$(DESTDIR)$(bindir)"
