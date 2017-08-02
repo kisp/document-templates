@@ -11,14 +11,13 @@ Feature: informational
   Scenario: print short usage
     When I run `document-templates`
     Then the exit status should be 1
-    And the output should contain "document-templates help | -h | --help"
-    And the output should contain "document-templates --version"
+    And the output should contain "-h  --help"
+    And the output should contain "-V  --version"
 
   Scenario Outline: print help
     When I run `document-templates <arg>`
     Then the exit status should be 0
-    And the output should contain "Options:"
-    And the output should contain "-h       --help             Show this help"
+    And the output should contain "-h  --help"
 
     Examples:
     | arg     |
