@@ -21,7 +21,6 @@ Feature: informational
 
     Examples:
     | arg     |
-    | help    |
     | -h      |
     | --help  |
     | --hel   |

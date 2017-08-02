@@ -149,10 +149,10 @@
   ((exit-code :initarg :exit-code :reader exit-code))
   (:default-initargs :exit-code 0))
 
-(define-condition usage ()
+(define-condition usage (quit)
   ((list-options :initarg :list-options :reader list-options)
    (errors :accessor errors :initarg :errors))
-  (:default-initargs :list-options nil :errors nil))
+  (:default-initargs :list-options nil :errors nil :exit-code 1))
 
 (define-condition fatal (simple-error)
   ())
@@ -227,7 +227,11 @@
 
 (defcmd cmd-help (&rest args &key &allow-other-keys)
   (declare (ignore args))
-  (error 'usage :list-options t))
+  (error 'usage :list-options t :exit-code 0))
+
+(defcmd cmd-null (&rest args &key &allow-other-keys)
+  (declare (ignore args))
+  (error 'usage :list-options t :exit-code 1))
 
 (defcmd cmd-version (&rest args &key &allow-other-keys)
   (declare (ignore args))
@@ -266,7 +270,7 @@
     (error 'fatal
            :format-control "More than one command given."))
   (let ((cmd (or (find-if #'symbolp opts)
-                 'cmd-help)))
+                 'cmd-null)))
     (handler-case
         (cmdcall cmd args (flatten (remove cmd opts)))
       (missing-args (c)
@@ -315,7 +319,7 @@
               (write-line (help-line)))
           (dolist (err (errors c))
             (write-string err))
-          (error 'quit :exit-code 1))
+          (error 'quit :exit-code (exit-code c)))
         (fatal (c)
           (format t "Fatal error: ")
           (apply #'format t
