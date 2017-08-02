@@ -1,1 +1,2 @@
 ql :all :latest
+http trivial-template http://pauldist.kisp.in/archive/trivial-template-0.0.1.tgz 3c726637264950e82123eb5427c66238
