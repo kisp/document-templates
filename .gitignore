@@ -3,3 +3,5 @@ document-templates
 Makefile
 .DS_Store
 .vagrant
+quicklisp
+bundle-libs

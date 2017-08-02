@@ -4,7 +4,7 @@ sudo: required
 env:
   matrix:
     - LISP=sbcl-bin TARGET=qlot
-#    - LISP=sbcl-bin TARGET=bundle
+    - LISP=sbcl-bin TARGET=bundle
 
 install:
 #  - sudo apt-get install checkinstall
