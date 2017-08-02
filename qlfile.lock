@@ -1,0 +1,16 @@
+("quicklisp" .
+ (:class qlot.source.ql:source-ql-all
+  :initargs (:project-name "quicklisp" :%version :latest)
+  :version "2017-07-25"))
+("trivial-template" .
+ (:class qlot.source.http:source-http
+  :initargs (:project-name "trivial-template" :url "http://pauldist.kisp.in/archive/trivial-template-0.0.1.tgz" :archive-md5 "3c726637264950e82123eb5427c66238")
+  :version "http-3c726637264950e82123eb5427c66238"
+  :url "http://pauldist.kisp.in/archive/trivial-template-0.0.1.tgz"
+  :archive-md5 "3c726637264950e82123eb5427c66238"))
+("hgetopt" .
+ (:class qlot.source.http:source-http
+  :initargs (:project-name "hgetopt" :url "http://pauldist.kisp.in/archive/hgetopt-0.0.4.tgz" :archive-md5 "ed678713a59120d232e8a0b1a7d42b95")
+  :version "http-ed678713a59120d232e8a0b1a7d42b95"
+  :url "http://pauldist.kisp.in/archive/hgetopt-0.0.4.tgz"
+  :archive-md5 "ed678713a59120d232e8a0b1a7d42b95"))
