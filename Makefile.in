@@ -21,6 +21,7 @@ bundle-build:
 	tar xfj bundle-libs.tar.bz2
 	sbcl --no-userinit --non-interactive \
 	  --load .sbcl-disable-debugger.lisp \
+	  --load .asdf.lisp \
 	  --load bundle-libs/bundle.lisp \
 	  --load document-templates.asd \
 	  --eval '(push :standalone *features*)' \
