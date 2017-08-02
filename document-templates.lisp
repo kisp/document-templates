@@ -336,3 +336,14 @@
   (handler-case
       (main sb-ext:*posix-argv*)
     (quit (c) (sb-ext:exit :code (exit-code c)))))
+
+(defun dump ()
+  (asdf:clear-configuration)
+  (asdf/find-system:clear-defined-systems)
+  (sb-ext:save-lisp-and-die "document-templates"
+                          :toplevel #'document-templates::sbcl-main
+                          :executable t
+                          :save-runtime-options t
+                          :compression
+                          #+sb-core-compression t
+                          #-sb-core-compression nil))
