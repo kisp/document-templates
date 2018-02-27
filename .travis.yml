@@ -7,7 +7,6 @@ env:
     - LISP=sbcl-bin TARGET=bundle
 
 install:
-#  - sudo apt-get install checkinstall
   - case "$TARGET" in 
       qlot)
         curl -L https://raw.githubusercontent.com/roswell/roswell/release/scripts/install-for-ci.sh | sh
