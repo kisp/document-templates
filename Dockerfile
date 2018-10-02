@@ -18,4 +18,6 @@ WORKDIR /
 
 RUN rm -rf /src && rm -rf $HOME/.cache/common-lisp
 
+RUN apk del sbcl make
+
 #ENTRYPOINT ["document-templates"]
