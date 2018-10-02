@@ -16,6 +16,6 @@ RUN mv document-templates /usr/local/bin
 
 WORKDIR /
 
-RUN rm -rf /src
+RUN rm -rf /src && rm -rf $HOME/.cache/common-lisp
 
 #ENTRYPOINT ["document-templates"]
