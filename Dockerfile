@@ -18,4 +18,4 @@ WORKDIR /
 
 RUN rm -rf /src
 
-ENTRYPOINT ["document-templates"]
+#ENTRYPOINT ["document-templates"]
