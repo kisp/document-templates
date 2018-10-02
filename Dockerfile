@@ -14,4 +14,8 @@ RUN make bundle-build
 
 RUN mv document-templates /usr/local/bin
 
+WORKDIR /
+
+RUN rm -rf /src
+
 ENTRYPOINT ["document-templates"]
