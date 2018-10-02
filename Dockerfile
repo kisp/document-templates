@@ -6,13 +6,12 @@ RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >>/etc/apk/reposito
 
 ADD . /src
 
-RUN cd /src && \
-        ./configure && \
-        make bundle-build && \
-        mv document-templates /usr/local/bin
+WORKDIR /src
+
+RUN ./configure && make bundle-build
 
 FROM alpine:latest
 
-COPY --from=0 /usr/local/bin/document-templates /usr/local/bin/document-templates
+COPY --from=0 /src/document-templates /usr/local/bin/document-templates
 
 ENTRYPOINT ["document-templates"]
