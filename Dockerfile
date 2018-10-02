@@ -6,17 +6,7 @@ RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >>/etc/apk/reposito
 
 ADD . /src
 
-WORKDIR /src
-
-RUN ./configure
-
-RUN make bundle-build
-
-RUN mv document-templates /usr/local/bin
-
-WORKDIR /
-
-RUN rm -rf /src && rm -rf $HOME/.cache/common-lisp
+RUN cd /src && ./configure && make bundle-build && mv document-templates /usr/local/bin && rm -rf /src && rm -rf $HOME/.cache/common-lisp
 
 RUN apk del sbcl make
 
