@@ -343,7 +343,7 @@
 
 (defun dump ()
   (asdf:clear-configuration)
-  (asdf/find-system:clear-defined-systems)
+  (asdf/find-system:clear-registered-systems)
   (sb-ext:save-lisp-and-die "document-templates"
                           :toplevel #'document-templates::sbcl-main
                           :executable t
