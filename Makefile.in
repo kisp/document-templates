@@ -8,6 +8,7 @@ default: bundle-build
 qlot-build:
 	ros --version
 	ros config
+	ros -l .sbcl-disable-debugger.lisp -e '(format t "asdf version ~A~%" (asdf:asdf-version))'
 	ros -l .sbcl-disable-debugger.lisp  -s qlot  -e '(qlot:install)'
 	env
 	ros -l .sbcl-disable-debugger.lisp  -s qlot \
@@ -18,6 +19,10 @@ qlot-build:
 
 bundle-build:
 	sbcl --version
+	sbcl --no-userinit --non-interactive \
+	  --load .sbcl-disable-debugger.lisp \
+	  --load .asdf.lisp \
+	  --eval '(format t "asdf version ~A~%" (asdf:asdf-version))'
 	tar xfj bundle-libs.tar.bz2
 	sbcl --no-userinit --non-interactive \
 	  --load .sbcl-disable-debugger.lisp \
