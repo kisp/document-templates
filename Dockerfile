@@ -17,3 +17,7 @@ RUN cd /src && \
 RUN apk del sbcl make
 
 #ENTRYPOINT ["document-templates"]
+
+FROM alpine:latest
+
+COPY --from=0 /usr/local/bin/document-templates /usr/local/bin/document-templates
