@@ -284,6 +284,9 @@
                       :format-arguments (list cmd (unexpected-key-key c)))))))
 
 (defun main (argv)
+  (when (sb-ext:posix-getenv "DOCUMENT_TEMPLATES_TEMPLATE_DIRECTORY")
+    (setq *template-directory*
+          (sb-ext:posix-getenv "DOCUMENT_TEMPLATES_TEMPLATE_DIRECTORY")))
   (let* ((cmds
            (list
             (make-option '(#\f) '("fill-template")
