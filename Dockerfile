@@ -14,4 +14,8 @@ FROM alpine:latest
 
 COPY --from=0 /src/document-templates /usr/local/bin/document-templates
 
+RUN mkdir /templates
+
+ENV DOCUMENT_TEMPLATES_TEMPLATE_DIRECTORY=/templates
+
 ENTRYPOINT ["document-templates"]
