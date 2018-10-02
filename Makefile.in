@@ -19,7 +19,7 @@ qlot-build:
 
 bundle-build:
 	sbcl --version
-	sbcl --no-userinit --non-interactive \
+	sbcl --noinform --no-userinit --non-interactive \
 	  --load .sbcl-disable-debugger.lisp \
 	  --load .asdf.lisp \
 	  --eval '(format t "asdf version ~A~%" (asdf:asdf-version))'
