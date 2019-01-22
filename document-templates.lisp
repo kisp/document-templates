@@ -122,11 +122,13 @@
 (defun list-template-directories ()
   (remove-if
    (lambda (dir)
-     (string= ".git"
-              (file-namestring (cl-fad:pathname-as-file dir))))
+     (or (string= ".git"
+                  (file-namestring (cl-fad:pathname-as-file dir)))
+         (not (cl-fad:directory-pathname-p dir))))
    (directory
     (merge-pathnames (make-pathname :name :wild :type :wild)
-                     *template-directory*))))
+                     *template-directory*)
+    #+sbcl :resolve-symlinks #+sbcl nil)))
 
 (defun prompt-for-list-item (message list &key (key #'identity))
   (format t "~A~%" message)
