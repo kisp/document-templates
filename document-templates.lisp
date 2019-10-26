@@ -130,6 +130,31 @@
        "Choose Template:"
        (list-template-directories) :key #'directory-namestring)))
 
+(defun get-template-parameters (template-config-pathname template-parameters-file)
+  (let (parameters-file-content)
+    (labels ((parameters-file-content ()
+               (or parameters-file-content
+                   (setq parameters-file-content
+                         (progn
+                           (unless (probe-file template-parameters-file)
+                             (error 'fatal
+                                    :format-control "file does not exist ~S"
+                                    :format-arguments (list template-parameters-file)))
+                           (read-config-file template-parameters-file)))))
+             (value-for-name-via-prompt (name default)
+               (prompt-for-defaulted-string name default))
+             (value-for-name-from-file (name default)
+               (getf (parameters-file-content) name default)))
+      (let ((value-for-name
+             (if template-parameters-file
+                 #'value-for-name-from-file
+                 #'value-for-name-via-prompt)))
+        (alist-plist
+         (with-open-config (config-parameters template-config-pathname)
+           (loop for (name . default) in
+                (plist-alist (getf config-parameters :default-parameters))
+              collect (cons name (funcall value-for-name name default)))))))))
+
 (defvar *template-directory*)
 
 (defun list-template-directories ()
@@ -264,19 +289,16 @@
 (defcmd cmd-fill-template (output-directory
                            &key
                            (templates-dir *template-directory*)
-                           template-name)
+                           template-name
+                           template-parameters-file)
   (with-templates-dir-opt (templates-dir)
     (let* ((output-directory (merge-pathnames (cl-fad:pathname-as-directory output-directory)))
            (template-directory (choose-template template-name))
            (template-config-pathname (merge-pathnames "config.lisp-expr" template-directory)))
-      (let ((parameters (alist-plist
-                         (with-open-config (config-parameters template-config-pathname)
-                           (loop for (name . default) in
-                                (plist-alist (getf config-parameters :default-parameters))
-                              collect (cons name (prompt-for-defaulted-string name default)))))))
-        (fill-template template-config-pathname
-                       parameters
-                       output-directory)))
+      (fill-template template-config-pathname
+                     (get-template-parameters template-config-pathname
+                                              template-parameters-file)
+                     output-directory))
     (error 'quit :exit-code 0)))
 
 (defun dispatch (opts args errs)
@@ -324,7 +346,10 @@
                         "Override templates directory")
            (make-option '() '("template-name")
                         (req-arg (curry #'list :template-name) "NAME")
-                        "Template to apply")))
+                        "Template to apply")
+           (make-option '() '("template-parameters")
+                        (req-arg (curry #'list :template-parameters-file) "FILE")
+                        "File to read for template parameters")))
          (all (append cmds options)))
     (multiple-value-bind (opts args errs)
         (get-opt :permute all (cdr argv))
