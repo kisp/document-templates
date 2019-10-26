@@ -101,6 +101,26 @@
          (plist-alist (getf config-parameters :default-parameters))
        do (format t "; ~S~24T~S~%" name default))))
 
+(defun check-for-existing-dirs (parameters template-file-pathnames output-directory)
+  (dolist (dir (remove-duplicates
+                (mapcar
+                 (lambda (template-file-pathname)
+                   (labels ((just-first-directory (pathname)
+                              (make-pathname
+                               :name nil :type nil
+                               :directory (subseq (pathname-directory pathname) 0 2)
+                               :defaults pathname)))
+                     (merge-pathnames
+                      (just-first-directory
+                       (fill-pathname template-file-pathname parameters))
+                      output-directory)))
+                 template-file-pathnames)
+                :test #'equal))
+    (when (probe-file dir)
+      (error 'fatal
+             :format-control "already exists ~S"
+             :format-arguments (list dir)))))
+
 (defun fill-template (template-config-pathname parameters output-directory)
   (with-open-config (config-parameters template-config-pathname)
     (let* ((output-directory
@@ -109,12 +129,14 @@
             (template-files-directory config-parameters))
            (template-file-pathnames
             (template-file-pathnames config-parameters
-                                     template-files-directory)))
+                                     template-files-directory))
+           (merged-parameters (merge-parameters parameters config-parameters)))
       (load-template-lisp-init-file config-parameters)
+      (check-for-existing-dirs merged-parameters template-file-pathnames output-directory)
       (with-template-package (config-parameters)
         (dolist (template-file-pathname template-file-pathnames)
           (fill-template-file template-file-pathname
-                              (merge-parameters parameters config-parameters)
+                              merged-parameters
                               output-directory))))))
 
 (defun choose-template (template-name)
