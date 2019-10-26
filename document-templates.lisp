@@ -117,6 +117,19 @@
                               (merge-parameters parameters config-parameters)
                               output-directory))))))
 
+(defun choose-template (template-name)
+  (if template-name
+      (or (find-if (lambda (dir)
+                  (equal template-name
+                         (car (last (pathname-directory dir)))))
+                   (list-template-directories))
+          (error 'fatal
+                 :format-control "no template found with name ~S"
+                 :format-arguments (list template-name)))
+      (prompt-for-list-item
+       "Choose Template:"
+       (list-template-directories) :key #'directory-namestring)))
+
 (defvar *template-directory*)
 
 (defun list-template-directories ()
@@ -249,12 +262,12 @@
     (error 'quit :exit-code 0)))
 
 (defcmd cmd-fill-template (output-directory
-                           &key (templates-dir *template-directory*))
+                           &key
+                           (templates-dir *template-directory*)
+                           template-name)
   (with-templates-dir-opt (templates-dir)
     (let* ((output-directory (merge-pathnames (cl-fad:pathname-as-directory output-directory)))
-           (template-directory (prompt-for-list-item
-                                "Choose Template:"
-                                (list-template-directories) :key #'directory-namestring))
+           (template-directory (choose-template template-name))
            (template-config-pathname (merge-pathnames "config.lisp-expr" template-directory)))
       (let ((parameters (alist-plist
                          (with-open-config (config-parameters template-config-pathname)
@@ -308,7 +321,10 @@
           (list
            (make-option '(#\T) '("templates-dir")
                         (req-arg (curry #'list :templates-dir) "DIR")
-                        "Override templates directory")))
+                        "Override templates directory")
+           (make-option '() '("template-name")
+                        (req-arg (curry #'list :template-name) "NAME")
+                        "Template to apply")))
          (all (append cmds options)))
     (multiple-value-bind (opts args errs)
         (get-opt :permute all (cdr argv))
