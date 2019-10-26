@@ -124,7 +124,8 @@
    (lambda (dir)
      (or (string= ".git"
                   (file-namestring (cl-fad:pathname-as-file dir)))
-         (not (cl-fad:directory-pathname-p dir))))
+         (not (cl-fad:directory-pathname-p dir))
+         (not (probe-file (merge-pathnames "config.lisp-expr" dir)))))
    (directory
     (merge-pathnames (make-pathname :name :wild :type :wild)
                      *template-directory*)
