@@ -1,5 +1,7 @@
-language: common-lisp
+language: lisp
 sudo: required
+
+dist: bionic
 
 env:
   matrix:
@@ -7,9 +9,13 @@ env:
     - LISP=sbcl-bin TARGET=bundle
 
 install:
-  - case "$TARGET" in
+  - |
+    case "$TARGET" in 
       qlot)
-        curl -L https://raw.githubusercontent.com/roswell/roswell/release/scripts/install-for-ci.sh | sh
+        curl -L https://raw.githubusercontent.com/snmsts/roswell/release/scripts/install-for-ci.sh | sh
+        mkdir -p ~/.roswell/lisp/quicklisp/dists/pauldist
+        curl -L http://pauldist.kisp.in/pauldist.txt > ~/.roswell/lisp/quicklisp/dists/pauldist/distinfo.txt
+        touch  ~/.roswell/lisp/quicklisp/dists/pauldist/enabled.txt        
         ;;
       bundle)
         sudo apt-get install sbcl
