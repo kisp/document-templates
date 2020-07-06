@@ -9,10 +9,9 @@ qlot-build:
 	ros --version
 	ros config
 	ros -l .sbcl-disable-debugger.lisp -e '(format t "asdf version ~A~%" (asdf:asdf-version))'
-	ros -l .sbcl-disable-debugger.lisp  -s qlot  -e '(qlot:install)'
-	ros -l .sbcl-disable-debugger.lisp  -s qlot \
+	ros -l .sbcl-disable-debugger.lisp \
 	  -e '(push :standalone *features*)' \
-	  -e '(qlot:quickload :document-templates)' \
+	  -e '(ql:quickload :document-templates)' \
 	  -e '(document-templates::dump)'
 	./document-templates --version
 
