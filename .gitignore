@@ -5,3 +5,4 @@ Makefile
 .vagrant
 quicklisp
 bundle-libs
+result
