@@ -6,3 +6,4 @@ Makefile
 quicklisp
 bundle-libs
 result
+result-*

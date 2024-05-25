@@ -39,4 +39,5 @@ let
 in
 {
   inherit app;
+  lib = document-templates;
 }
