@@ -8,7 +8,7 @@ let
   sbcl' = pkgs.sbcl.withPackages (ps: with ps; [ document-templates ]);
   app = pkgs.stdenv.mkDerivation {
     pname = "document-templates-app";
-    version = "0.0.17";
+    version = "0.0.19";
     src =
       let
         patterns = ''

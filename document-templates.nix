@@ -19,7 +19,7 @@ let
 in
 sbcl.buildASDFSystem {
   pname = "document-templates";
-  version = "0.0.17";
+  version = "0.0.19";
   src =
     let
       patterns = ''
